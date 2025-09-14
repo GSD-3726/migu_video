@@ -1,5 +1,5 @@
 version: '1.0'
-name: fetch
+name: fetch1
 displayName: fetch
 triggers:
   trigger: auto
