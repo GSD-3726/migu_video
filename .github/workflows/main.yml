@@ -12,7 +12,6 @@ triggers:
 variables:
   global:
     - GITHUB_TOKEN
-    - TOKEN
 stages:
   - name: fetchurl
     displayName: fetchurl
@@ -24,24 +23,15 @@ stages:
         displayName: fetchurl
         nodeVersion: 21.5.0
         commands:
-          - git clone https://dream-deve:${TOKEN}@gitee.com/dream-deve/migu_video.git
-          - '# git clone https://develop202:${GITHUB_TOKEN}@github.com/develop202/migu_video.git'
+          - git clone https://develop202:${GITHUB_TOKEN}@github.com/develop202/migu_video.git
           - cd migu_video
-          - '# 设置NPM源，提升安装速度'
           - npm config set registry https://registry.npmmirror.com
-          - '# 执行编译命令 '
-          - '# npm install && node fetchURLByWasm.js'
-          - '# npm install && node fetchURLByAndroid.js'
-          - '# npm install && node fetchURLByAndroidV2.js'
           - npm install && node fetchURLByAndroid720p.js
-          - '# npm install && node fetchURLByWasmV2.js'
-          - git config user.name "Gitee流水线"
-          - git config user.email "actions@githee.com"
+          - git config user.name "GitHub Actions"
+          - git config user.email "actions@github.com"
           - git add .
-          - '# gitee流水线提交 '
-          - git diff --quiet && git diff --staged --quiet || git commit -m "Update by Gitee流水线"
-          - '# git push -f https://dream-deve:${TOKEN}@gitee.com/dream-deve/migu_video.git main:main'
-          - git push
+          - git diff --quiet && git diff --staged --quiet || git commit -m "Update by GitHub Actions"
+          - git push origin main
         strategy:
           retry: '3'
           timeout: 2
