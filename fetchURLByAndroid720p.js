@@ -1,16 +1,11 @@
 import { dataList } from "./utils/fetchList.js"
 import { getAndroidURL720p } from "./utils/androidURL.js"
-import refreshToken from "./utils/refreshToken.js"
 import { appendFile, writeFile } from "./utils/fileUtil.js"
 import { updatePlaybackData } from "./utils/playback.js"
 
 async function fetchURLByAndroid() {
 
-  const userId = process.env.USERID
-  const token = process.env.MIGU_TOKEN
-
-  const date = new Date()
-  const start = date.getTime()
+  const start = Date.now()
 
   // 必须绝对路径
   const path = process.cwd() + '/interface.txt'
@@ -26,13 +21,7 @@ async function fetchURLByAndroid() {
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<tv generator-info-name="Tak" generator-info-url="https://github.com/develop202/migu_video/">\n`)
 
-  if (!date.getHours()) {
-    // 0点刷新token
-    await refreshToken(userId, token) ? console.log("token刷新成功") : console.log("token刷新失败")
-  }
-
   // 写入开头
-  // appendFile(aptvPath, `#EXTM3U x-tvg-url="https://gitee.com/dream-deve/migu_video/raw/main/playback.xml" catchup="append" catchup-source="&playbackbegin=\${(b)yyyyMMddHHmmss}&playbackend=\${(e)yyyyMMddHHmmss}"\n`)
   appendFile(path, `#EXTM3U x-tvg-url="https://develop202.github.io/migu_video/playback.xml,https://raw.githubusercontent.com/develop202/migu_video/refs/heads/main/playback.xml,https://gh-proxy.com/https://raw.githubusercontent.com/develop202/migu_video/refs/heads/main/playback.xml" catchup="append" catchup-source="&playbackbegin=\${(b)yyyyMMddHHmmss}&playbackend=\${(e)yyyyMMddHHmmss}"\n`)
 
   // 分类列表
