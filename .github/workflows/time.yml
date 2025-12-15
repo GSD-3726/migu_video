@@ -1,0 +1,90 @@
+name: Create Timestamp Marker
+
+on:
+  schedule:
+    # 每3小时运行一次 (UTC时间)
+    - cron: '0 */3 * * *'
+  workflow_dispatch:  # 允许手动触发
+    inputs:
+      reason:
+        description: '手动触发原因'
+        required: false
+        default: '手动执行'
+
+jobs:
+  create-timestamp:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 设置时区 (Asia/Shanghai)
+      run: |
+        sudo timedatectl set-timezone Asia/Shanghai
+        echo "当前时间: $(date)"
+    
+    - name: 删除旧的时间标记文件
+      run: |
+        echo "正在查找并删除旧的时间标记文件..."
+        # 删除所有时间标记文件（保留其他重要文件）
+        find . -maxdepth 2 -name "timestamp_*.txt" -type f -delete || echo "没有找到旧的时间标记文件"
+        find . -maxdepth 2 -name "time_marker_*.txt" -type f -delete || echo "没有找到旧的时间标记文件"
+        echo "旧标记文件已清理"
+    
+    - name: 创建新的时间标记文件
+      run: |
+        echo "正在创建新的时间标记文件..."
+        TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S_%Z")
+        FILENAME="timestamp_${TIMESTAMP}.txt"
+        
+        # 创建标记文件内容
+        echo "# 时间标记" > "$FILENAME"
+        echo "创建时间: $(date '+%Y-%m-%d %H:%M:%S %Z')" >> "$FILENAME"
+        echo "时区: $(date +%Z)" >> "$FILENAME"
+        echo "GitHub Actions Run ID: $GITHUB_RUN_ID" >> "$FILENAME"
+        echo "工作流: $GITHUB_WORKFLOW" >> "$FILENAME"
+        echo "触发方式: ${{ github.event_name }}" >> "$FILENAME"
+        
+        # 如果是手动触发，添加原因
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "触发原因: ${{ github.event.inputs.reason || '未指定' }}" >> "$FILENAME"
+        fi
+        
+        echo "已创建文件: $FILENAME"
+        
+        # 显示文件内容
+        echo "=== 文件内容 ==="
+        cat "$FILENAME"
+        echo "================"
+    
+    - name: 提交更改
+      run: |
+        echo "正在提交更改..."
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        git add timestamp_*.txt
+        
+        # 检查是否有文件需要提交
+        if git diff --cached --quiet; then
+          echo "没有文件需要提交"
+        else
+          git commit -m "🤖 自动更新时间标记: $(date '+%Y-%m-%d %H:%M:%S %Z')
+          
+          由 GitHub Actions 自动执行
+          运行 ID: $GITHUB_RUN_ID
+          工作流: $GITHUB_WORKFLOW
+          触发事件: ${{ github.event_name }}"
+          
+          git push origin main
+          echo "更改已提交并推送"
+        fi
+    
+    - name: 创建完成通知
+      run: |
+        echo "✅ 时间标记创建任务完成！"
+        echo "📅 执行时间: $(date '+%Y-%m-%d %H:%M:%S %Z')"
+        echo "📁 新标记文件: $(ls -la timestamp_*.txt 2>/dev/null | head -1 | awk '{print $9}')"
